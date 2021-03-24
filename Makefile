@@ -31,37 +31,37 @@ $(GOLANGCI_LINT):
 
 build-local: clean
 	@echo ">> building local binary"
-	@GOOS=$(shell uname -s | tr A-Z a-z) GOARCH=amd64 CGO_ENABLED=0		\
-	go build -mod=vendor -ldflags "-s -w								\
-	  -X $(ROOT)/pkg/version.Version=$(VERSION)							\
-	  -X $(ROOT)/pkg/version.Branch=$(BRANCH)							\
-	  -X $(ROOT)/pkg/version.Commit=$(COMMIT)							\
-	  -X $(ROOT)/pkg/version.BuildUser=$(BUILD_USER)					\
-	  -X $(ROOT)/pkg/version.BuildDate=$(BUILD_DATE)"					\
-	-o journey
+	@GOOS=$(shell uname -s | tr A-Z a-z) GOARCH=amd64 CGO_ENABLED=0     \
+	  go build -mod=vendor -ldflags "-s -w                              \
+	    -X $(ROOT)/pkg/version.Version=$(VERSION)                       \
+	    -X $(ROOT)/pkg/version.Branch=$(BRANCH)                         \
+	    -X $(ROOT)/pkg/version.Commit=$(COMMIT)                         \
+	    -X $(ROOT)/pkg/version.BuildUser=$(BUILD_USER)                  \
+	    -X $(ROOT)/pkg/version.BuildDate=$(BUILD_DATE)"                 \
+	    -o playground
 
 build-linux:
 	@echo ">> building linux binary"
-	@docker run --rm -t													\
-	  -v "$(PWD):/go/src/$(ROOT)" -w /go/src/$(ROOT)					\
-	  -e GOOS=linux	-e GOARCH=amd64										\
-	  golang:$(GO_VERSION) /bin/bash -c									\
-		'go build -mod=vendor -ldflags "-s -w							\
-		  -X $(ROOT)/pkg/version.Version=$(VERSION)						\
-		  -X $(ROOT)/pkg/version.Branch=$(BRANCH)						\
-		  -X $(ROOT)/pkg/version.Commit=$(COMMIT)						\
-		  -X $(ROOT)/pkg/version.BuildUser=$(BUILD_USER)				\
-		  -X $(ROOT)/pkg/version.BuildDate=$(BUILD_DATE)"				\
-		-o journey'
+	@PWD=$(PWD) sudo docker run --rm -t                                 \
+	  -v "$(PWD):/go/src/$(ROOT)" -w /go/src/$(ROOT)                    \
+	  -e GOOS=linux	-e GOARCH=amd64 -e GOPATH=/go                       \
+	  golang:$(GO_VERSION) /bin/bash -c                                 \
+		'go build -mod=vendor -ldflags "-s -w                           \
+		  -X $(ROOT)/pkg/version.Version=$(VERSION)                     \
+		  -X $(ROOT)/pkg/version.Branch=$(BRANCH)                       \
+		  -X $(ROOT)/pkg/version.Commit=$(COMMIT)                       \
+		  -X $(ROOT)/pkg/version.BuildUser=$(BUILD_USER)                \
+		  -X $(ROOT)/pkg/version.BuildDate=$(BUILD_DATE)"               \
+		-o playground'
 
 container: build-linux
 	@echo ">> building image"
-	@docker build -t $(REGISTRY)/journey-server:$(VERSION) -f ./Dockerfile .
+	@sudo docker build -t $(REGISTRY)/playground:$(VERSION) -f ./Dockerfile .
 
 push: container
 	@echo ">> pushing image"
-	@docker push $(REGISTRY)/journey-server:$(VERSION)
+	@sudo docker push $(REGISTRY)/playground:$(VERSION)
 
 clean:
 	@echo ">> cleaning up"
-	@rm -f journey coverage.out
+	@rm -f playground coverage.out
